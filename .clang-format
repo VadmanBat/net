@@ -1,0 +1,61 @@
+BasedOnStyle: Google                  # Базовый стиль — Google. Все неуказанные параметры берутся из стиля Google.
+
+IndentWidth: 4                        # Ширина одного уровня отступа — 4 пробела.
+UseTab: Never                         # Никогда не использовать символы табуляции, только пробелы.
+
+Standard: Latest                      # Использовать самый новый стандарт C++ (на момент clang-format 22 — C++23).
+# Это важно для правильного форматирования современных фич: concepts, ranges, coroutines, modules и т.д.
+
+BreakBeforeBraces: Custom             # Кастомный режим размещения скобок — обязательно, чтобы работали индивидуальные настройки BraceWrapping.
+
+SortIncludes: CaseInsensitive         # Умная сортировка #include: сначала системные, потом внешние, потом свои — и внутри каждого блока по алфавиту.
+IncludeBlocks: Regroup                # Группирует include в логические блоки (system / external / project) и ставит пустые строки между ними.
+# Работает только вместе с SortIncludes: Block — очень удобно для больших проектов.
+
+MaxEmptyLinesToKeep: 1                # Оставляет максимум одну пустую строку подряд. Убирает «ползучие» лишние пустые строки после рефакторинга.
+
+BraceWrapping:
+  AfterCaseLabel: false               # Не переносить { после case
+  AfterClass: false                   # Не переносить { после class/struct
+  AfterControlStatement: false        # Не переносить { после if/for/while/switch (скобка на той же строке)
+  AfterEnum: false                    # Не переносить { после enum
+  AfterFunction: false                # Не переносить { после объявления функции
+  AfterNamespace: false               # Не переносить { после namespace
+  AfterObjCDeclaration: false         # Не переносить { после Objective-C объявлений
+  AfterStruct: false                  # Не переносить { после struct
+  AfterUnion: false                   # Не переносить { после union
+  AfterExternBlock: false             # Не переносить { после extern "C"
+  BeforeCatch: true                   # Перенос перед catch (} на одной строке, catch на новой)
+  BeforeElse: true                    # Перенос перед else (} на одной строке, else на новой)
+  BeforeLambdaBody: false             # Не переносить { у лямбд
+  BeforeWhile: false                  # Не переносить while в do-while
+  IndentBraces: false                 # Не добавлять лишний отступ для скобок
+  SplitEmptyFunction: true            # Пустые функции/методы на нескольких строках ({\n})
+  SplitEmptyRecord: true              # То же для пустых class/struct/union
+  SplitEmptyNamespace: true           # То же для пустых namespace
+
+AllowShortIfStatementsOnASingleLine: Never
+# Запрещаем однострочные if без скобок (даже с else). Теперь всегда требуются { }
+AllowShortLoopsOnASingleLine: false   # Запрет коротких циклов на одной строке
+AllowShortFunctionsOnASingleLine: Inline
+# Только inline-функции могут быть на одной строке
+AllowShortCaseLabelsOnASingleLine: false
+# Не разрешать несколько case на одной строке
+AllowShortBlocksOnASingleLine: Never  # Никогда не сворачивать короткие блоки на одну строку
+
+ColumnLimit: 120                      # Максимальная длина строки — 120 символов
+
+SpaceBeforeParens: ControlStatements  # Пробел перед скобками только в if/for/while и т.п., но не в вызовах функций
+SpaceAfterCStyleCast: false           # Без пробела после static_cast<int>(x)
+SpacesInAngles: false                 # Без пробелов в шаблонах: vector<int>
+SpacesInParentheses: false            # Без пробелов в круглых скобках: func(a, b)
+SpacesInSquareBrackets: false         # Без пробелов в квадратных: arr[0]
+SpaceBeforeAssignmentOperators: true  # Пробелы вокруг =, += и т.д.: a = b;
+
+AlignConsecutiveAssignments: true     # Выравнивает цепочки присваиваний по знаку =:
+# int    a   = 1;
+# int    bbb = 20;
+AlignTrailingComments: true           # Выравнивает «висячие» комментарии по правому краю (по ColumnLimit)
+
+DerivePointerAlignment: false         # Не угадывать выравнивание указателей автоматически
+PointerAlignment: Left                # * и & слева: int* p; (а не int *p;)

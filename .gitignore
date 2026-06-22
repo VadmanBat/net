@@ -1,0 +1,14 @@
+.idea/
+cmake-build-*/
+
+# Microsoft Excel файлы
+*.xls
+*.xlsx
+*.xlsm
+*.xlsb
+*.xltx
+*.xltm
+
+# Временные и автосохранённые файлы Excel
+~$*.xls*
+~$*.xlsx*
