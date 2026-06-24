@@ -1,6 +1,7 @@
 #include "net/file-transfer.h"
 #include "net/tcp-socket.h"
 
+#include <bit>
 #include <cstdio>
 #include <vector>
 #include <filesystem>
@@ -10,16 +11,14 @@ namespace fs = std::filesystem;
 namespace net {
 constexpr size_t BUFFER_SIZE = 1 << 16; // 64 КиБ — оптимально для сети
 
-uint64_t host_to_network64(const uint64_t value) {
-    const uint32_t high = htonl(static_cast<uint32_t>(value >> 32));
-    const uint32_t low  = htonl(static_cast<uint32_t>(value));
-    return (static_cast<uint64_t>(high) << 32) | low;
+constexpr uint64_t host_to_network64(const uint64_t value) {
+    if constexpr (std::endian::native == std::endian::little)
+        return std::byteswap(value);
+    return value;
 }
 
-uint64_t network_to_host64(const uint64_t value) {
-    const uint32_t high = ntohl(static_cast<uint32_t>(value >> 32));
-    const uint32_t low  = ntohl(static_cast<uint32_t>(value));
-    return (static_cast<uint64_t>(high) << 32) | low;
+constexpr uint64_t network_to_host64(const uint64_t value) {
+    return host_to_network64(value);
 }
 
 bool send_uint64(const TcpSocket& socket, const uint64_t value) {

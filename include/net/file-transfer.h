@@ -10,8 +10,8 @@ namespace fs = std::filesystem;
 namespace net {
 using ProgressCallback = std::function<void(uint64_t sent, uint64_t total)>;
 
-uint64_t host_to_network64(uint64_t value);
-uint64_t network_to_host64(uint64_t value);
+constexpr uint64_t host_to_network64(uint64_t value);
+constexpr uint64_t network_to_host64(uint64_t value);
 
 bool send_uint64(const TcpSocket& socket, uint64_t value);
 bool receive_uint64(const TcpSocket& socket, uint64_t& value);
