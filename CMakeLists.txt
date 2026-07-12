@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.31)
 project(net VERSION 1.0 LANGUAGES CXX)
 
 add_library(net STATIC
-        src/net-initializer.cpp
-        src/tcp-socket.cpp
-        src/tcp-server.cpp
-        src/file-transfer.cpp
+        src/net/net-initializer.cpp
+        src/net/tcp-socket.cpp
+        src/net/tcp-server.cpp
+        src/net/file-transfer.cpp
 )
 add_library(net::net ALIAS net)
 
