@@ -1,61 +1,64 @@
-BasedOnStyle: Google                  # Базовый стиль — Google. Все неуказанные параметры берутся из стиля Google.
+# База Google + локальные правки. Неуказанное берётся из Google.
 
-IndentWidth: 4                        # Ширина одного уровня отступа — 4 пробела.
-UseTab: Never                         # Никогда не использовать символы табуляции, только пробелы.
+BasedOnStyle: Google                  # база: Google C++ style
+IndentWidth: 4                        # void f() {\n····int x;\n}
+UseTab: Never                         # отступы пробелами, не \t
+Standard: Latest                      # C++23+ (concepts, ranges, …)
+MaxEmptyLinesToKeep: 1                # a;\n\nb;  — не больше одной пустой
+ColumnLimit: 120                      # перенос, если строка > 120
+FixNamespaceComments: false           # }   а не  }  // namespace foo
+AccessModifierOffset: -4              # class A {\npublic:\n····int x;\n};
 
-Standard: Latest                      # Использовать самый новый стандарт C++ (на момент clang-format 22 — C++23).
-# Это важно для правильного форматирования современных фич: concepts, ranges, coroutines, modules и т.д.
+# === Includes ===
+SortIncludes: CaseInsensitive         # <Vector> и <vector> — один порядок
+IncludeBlocks: Regroup                # блоки + пустая строка между ними
+IncludeCategories: # меньший Priority — выше в файле
+  - Regex: '^"'                       # #include "a.h"
+    Priority: 1
+  - Regex: '^<'                       # #include <vector>
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
+# → "project.h"\n\n<cmath>\n<vector>
 
-BreakBeforeBraces: Custom             # Кастомный режим размещения скобок — обязательно, чтобы работали индивидуальные настройки BraceWrapping.
-
-SortIncludes: CaseInsensitive         # Умная сортировка #include: сначала системные, потом внешние, потом свои — и внутри каждого блока по алфавиту.
-IncludeBlocks: Regroup                # Группирует include в логические блоки (system / external / project) и ставит пустые строки между ними.
-# Работает только вместе с SortIncludes: Block — очень удобно для больших проектов.
-
-MaxEmptyLinesToKeep: 1                # Оставляет максимум одну пустую строку подряд. Убирает «ползучие» лишние пустые строки после рефакторинга.
-
+# === Braces (Custom: else/catch на новой строке, остальное Attach) ===
+BreakBeforeBraces: Custom
 BraceWrapping:
-  AfterCaseLabel: false               # Не переносить { после case
-  AfterClass: false                   # Не переносить { после class/struct
-  AfterControlStatement: false        # Не переносить { после if/for/while/switch (скобка на той же строке)
-  AfterEnum: false                    # Не переносить { после enum
-  AfterFunction: false                # Не переносить { после объявления функции
-  AfterNamespace: false               # Не переносить { после namespace
-  AfterObjCDeclaration: false         # Не переносить { после Objective-C объявлений
-  AfterStruct: false                  # Не переносить { после struct
-  AfterUnion: false                   # Не переносить { после union
-  AfterExternBlock: false             # Не переносить { после extern "C"
-  BeforeCatch: true                   # Перенос перед catch (} на одной строке, catch на новой)
-  BeforeElse: true                    # Перенос перед else (} на одной строке, else на новой)
-  BeforeLambdaBody: false             # Не переносить { у лямбд
-  BeforeWhile: false                  # Не переносить while в do-while
-  IndentBraces: false                 # Не добавлять лишний отступ для скобок
-  SplitEmptyFunction: true            # Пустые функции/методы на нескольких строках ({\n})
-  SplitEmptyRecord: true              # То же для пустых class/struct/union
-  SplitEmptyNamespace: true           # То же для пустых namespace
+  AfterCaseLabel: false               # case 1: {\n
+  AfterClass: false                   # class A {
+  AfterControlStatement: false        # if (x) {
+  AfterEnum: false                    # enum E {
+  AfterFunction: false                # void f() {
+  AfterNamespace: false               # namespace N {
+  AfterObjCDeclaration: false
+  AfterStruct: false                  # struct S {
+  AfterUnion: false                   # union U {
+  AfterExternBlock: false             # extern "C" {
+  BeforeCatch: true                   # }\ncatch (...) {
+  BeforeElse: true                    # }\nelse {
+  BeforeLambdaBody: false             # []() {
+  BeforeWhile: false                  # } while (1);
+  IndentBraces: false                 # не ··{
+  SplitEmptyFunction: false           # Foo() : x(0) {}
+  SplitEmptyRecord: true              # class A\n{\n}
+  SplitEmptyNamespace: true           # namespace N\n{\n}
 
-AllowShortIfStatementsOnASingleLine: Never
-# Запрещаем однострочные if без скобок (даже с else). Теперь всегда требуются { }
-AllowShortLoopsOnASingleLine: false   # Запрет коротких циклов на одной строке
-AllowShortFunctionsOnASingleLine: Inline
-# Только inline-функции могут быть на одной строке
-AllowShortCaseLabelsOnASingleLine: false
-# Не разрешать несколько case на одной строке
-AllowShortBlocksOnASingleLine: Never  # Никогда не сворачивать короткие блоки на одну строку
+# === Short constructs ===
+AllowShortIfStatementsOnASingleLine: Never     # if (x)\n····return;
+AllowShortLoopsOnASingleLine: false            # while (x)\n····f();
+AllowShortFunctionsOnASingleLine: Inline       # class A { int f() { return 1; } };
+AllowShortCaseLabelsOnASingleLine: false       # case 1:\n····x = 1;
+AllowShortBlocksOnASingleLine: Never           # while (1) {\n}
 
-ColumnLimit: 120                      # Максимальная длина строки — 120 символов
-
-SpaceBeforeParens: ControlStatements  # Пробел перед скобками только в if/for/while и т.п., но не в вызовах функций
-SpaceAfterCStyleCast: false           # Без пробела после static_cast<int>(x)
-SpacesInAngles: false                 # Без пробелов в шаблонах: vector<int>
-SpacesInParentheses: false            # Без пробелов в круглых скобках: func(a, b)
-SpacesInSquareBrackets: false         # Без пробелов в квадратных: arr[0]
-SpaceBeforeAssignmentOperators: true  # Пробелы вокруг =, += и т.д.: a = b;
-
-AlignConsecutiveAssignments: true     # Выравнивает цепочки присваиваний по знаку =:
-# int    a   = 1;
-# int    bbb = 20;
-AlignTrailingComments: true           # Выравнивает «висячие» комментарии по правому краю (по ColumnLimit)
-
-DerivePointerAlignment: false         # Не угадывать выравнивание указателей автоматически
-PointerAlignment: Left                # * и & слева: int* p; (а не int *p;)
+# === Spaces & alignment ===
+SpaceBeforeParens: ControlStatements  # if (x)  /  f(x)
+SpaceAfterCStyleCast: false           # (int)x
+SpacesInAngles: false                 # vector<int>
+SpacesInParentheses: false            # f(a, b)
+SpacesInSquareBrackets: false         # a[0]
+SpaceBeforeAssignmentOperators: true  # a = b
+AlignConsecutiveAssignments: true     # a···= 1;\nlong·= 2;  (только =, без +=)
+AlignTrailingComments: true           # int a;·// c1\nint bb;·// c2
+SpacesBeforeTrailingComments: 1       # int a; // c (один пробел перед //)
+DerivePointerAlignment: false         # не угадывать по файлу
+PointerAlignment: Left                # int* p;  (не int *p)
