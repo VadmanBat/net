@@ -9,6 +9,8 @@ add_library(net STATIC
 )
 add_library(net::net ALIAS net)
 
+target_compile_features(net PUBLIC cxx_std_17)
+
 target_include_directories(net PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>

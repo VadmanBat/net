@@ -1,12 +1,11 @@
-#include <net/tcp-server.h>
-
 #include <iostream>
+#include <net/tcp-server.h>
 #include <string>
 #include <vector>
 
 int main() {
-    constexpr uint16_t port     = 50235;
-    const std::string listen_ip = "0.0.0.0";
+    constexpr std::uint16_t port = 50235;
+    const std::string listen_ip  = "0.0.0.0";
 
     net::TcpServer server;
     if (!server.listen(listen_ip, port)) {

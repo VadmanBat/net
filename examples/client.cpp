@@ -1,12 +1,11 @@
-#include <net/tcp-socket.h>
-
 #include <iostream>
+#include <net/tcp-socket.h>
 #include <string>
 #include <vector>
 
 int main() {
-    constexpr uint16_t port     = 50235;
-    const std::string server_ip = "127.0.0.1";
+    constexpr std::uint16_t port = 50235;
+    const std::string server_ip  = "127.0.0.1";
 
     net::TcpSocket client;
     if (!client.connect(server_ip, port)) {

@@ -2,8 +2,8 @@
 
 namespace net {
 class NetInitializer {
-    static NetInitializer instance;
-    bool initialized = false;
+    static NetInitializer instance_;
+    bool initialized_ = false;
 
 public:
     NetInitializer();
