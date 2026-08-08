@@ -3,8 +3,12 @@ project(net VERSION 1.0 LANGUAGES CXX)
 
 add_library(net STATIC
         src/net/net-initializer.cpp
-        src/net/tcp-socket.cpp
-        src/net/tcp-server.cpp
+        src/net/tcp-socket/tcp-socket.cpp
+        src/net/tcp-socket/setters.cpp
+        src/net/tcp-socket/getters.cpp
+        src/net/tcp-socket/io.cpp
+        src/net/tcp-socket/status.cpp
+        src/net/tcp-server/tcp-server.cpp
         src/net/file-transfer.cpp
 )
 add_library(net::net ALIAS net)
@@ -26,4 +30,10 @@ if (PROJECT_IS_TOP_LEVEL)
 
     add_executable(client examples/client.cpp)
     target_link_libraries(client PRIVATE net::net)
+
+    enable_testing()
+    add_executable(net-tests tests/loopback.cpp)
+    target_link_libraries(net-tests PRIVATE net::net)
+    target_include_directories(net-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+    add_test(NAME net-loopback COMMAND net-tests)
 endif ()

@@ -3,6 +3,7 @@
 #include "net/net-initializer.h"
 
 namespace net {
+
 TcpServer::TcpServer() {
     NetInitializer::ensureInitialized();
 }
@@ -11,7 +12,8 @@ TcpServer::~TcpServer() {
     close();
 }
 
-TcpServer::TcpServer(TcpServer&& other) noexcept : server_socket_(other.server_socket_), listening_(other.listening_) {
+TcpServer::TcpServer(TcpServer&& other) noexcept
+    : server_socket_(other.server_socket_), listening_(other.listening_), options_(other.options_) {
     other.server_socket_ = INVALID_SOCKET;
     other.listening_     = false;
 }
@@ -21,10 +23,19 @@ TcpServer& TcpServer::operator=(TcpServer&& other) noexcept {
         close();
         server_socket_       = other.server_socket_;
         listening_           = other.listening_;
+        options_             = other.options_;
         other.server_socket_ = INVALID_SOCKET;
         other.listening_     = false;
     }
     return *this;
+}
+
+void TcpServer::setOptions(const ServerOptions& options) {
+    options_ = options;
+}
+
+const ServerOptions& TcpServer::options() const {
+    return options_;
 }
 
 bool TcpServer::listen(const std::string& ip, const std::uint16_t port, const int backlog) {
@@ -35,12 +46,15 @@ bool TcpServer::listen(const std::string& ip, const std::uint16_t port, const in
     if (server_socket_ == INVALID_SOCKET)
         return false;
 
-    constexpr int reuse = 1;
+    if (options_.reuse_address) {
+        constexpr int reuse = 1;
 #ifdef _WIN32
-    setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&reuse), sizeof(reuse));
+        setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&reuse),
+                   sizeof(reuse));
 #else
-    setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+        setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 #endif
+    }
 
     sockaddr_in server_addr{};
     server_addr.sin_family = AF_INET;
@@ -76,10 +90,14 @@ std::unique_ptr<TcpSocket> TcpServer::acceptConnection() const {
 #else
     socklen_t client_len = sizeof(client_addr);
 #endif
-    const SOCKET client_socket = accept(server_socket_, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
+    const SOCKET client_socket =
+        accept(server_socket_, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
     if (client_socket == INVALID_SOCKET)
         return nullptr;
-    return std::make_unique<TcpSocket>(client_socket);
+
+    auto socket = std::make_unique<TcpSocket>(client_socket);
+    static_cast<void>(socket->setOptions(options_.accepted));
+    return socket;
 }
 
 void TcpServer::close() {
@@ -93,4 +111,5 @@ void TcpServer::close() {
 bool TcpServer::isListening() const {
     return listening_;
 }
-}
+
+} // namespace net

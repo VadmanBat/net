@@ -1,102 +1,64 @@
 # TcpServer 🖥️
 
 **Заголовок:** `include/net/tcp-server.h`  
-**Реализация:** `src/net/tcp-server.cpp`
+**Реализация:** `src/net/tcp-server/tcp-server.cpp`
 
-`TcpServer` — минимальный IPv4 TCP listener: `listen` → (многократно) `acceptConnection`.
-
-Нет worker-пула, нет `select` на нескольких клиентах, нет graceful drain API. Один сокет на сервер, accept отдаёт `std::unique_ptr<TcpSocket>`.
+IPv4 listener: `listen` → `acceptConnection`.
 
 ---
 
-## ✨ Возможности
+## Настройки: `ServerOptions`
 
-- `listen(ip, port, backlog = 5)`;
-- `SO_REUSEADDR` **перед** `bind` (удобнее переживать быстрый рестарт);
-- `acceptConnection()` — блокирующий `accept`;
-- `close()` / деструктор;
-- copy запрещён, move есть;
-- `isListening()`
+Одно поле `options_` вместо россыпи accepted-*.
 
-`NetInitializer::ensureInitialized()` вызывается в конструкторе.
+```cpp
+struct ServerOptions {
+    bool reuse_address = true;   // SO_REUSEADDR на listen
+    SocketOptions accepted{};    // применяется к каждому peer после accept
+};
+```
+
+`SocketOptions` — в `tcp-socket.h` (`std::optional` = «не трогать»).
+
+**Гайд для начинающих:** [socket-options.md](socket-options.md).
 
 ---
 
-## 🚀 Быстрый старт
+## API
+
+| Метод | Описание |
+|-------|----------|
+| `setOptions` / `options` | вся политика сервера |
+| `listen(ip, port, backlog = 5)` | bind + listen |
+| `acceptConnection()` | peer + `setOptions(options_.accepted)` |
+| `close()` / `isListening()` | |
+
+---
+
+## Пример
 
 ```cpp
 #include <net/tcp-server.h>
 #include <iostream>
 
-int main() {
-    net::TcpServer server;
-    // "0.0.0.0" — все интерфейсы; "127.0.0.1" — только localhost
-    if (!server.listen("0.0.0.0", 50235)) {
-        std::cerr << "listen failed\n";
-        return 1;
-    }
+net::ServerOptions opts;
+opts.reuse_address             = true;
+opts.accepted.no_delay         = true;
+opts.accepted.send_timeout_sec = 60;
+opts.accepted.recv_timeout_sec = 60;
+opts.accepted.send_buffer_size = 1 << 20;
 
-    // блокируется, пока не придёт клиент (или ошибка)
-    auto client = server.acceptConnection();
-    if (!client)
-        return 1;
+net::TcpServer server;
+server.setOptions(opts);
 
-    std::cout << client->remoteIp() << '\n';
-    auto data = client->receiveBytes(1024);
-}
+if (!server.listen("0.0.0.0", 50235))
+    return 1;
+
+auto client = server.acceptConnection();
+if (!client)
+    return 1;
+
+std::cout << client->remoteIp() << '\n';
 ```
 
-Повторный `listen` на том же объекте: если уже listening — сначала `close()`, затем новый socket.
-
----
-
-## 📋 API
-
-| Метод | Возврат | Поведение |
-|-------|---------|-----------|
-| `listen(ip, port, backlog)` | `bool` | socket → SO_REUSEADDR → `inet_pton` → bind → listen |
-| `acceptConnection()` | `unique_ptr<TcpSocket>` | `nullptr` если не listening или accept fail |
-| `close()` | void | close fd, `listening_ = false` |
-| `isListening()` | `bool` | локальный флаг после успешного listen |
-
-`inet_pton != 1` → listen fails (сокет закрывается).
-
----
-
-## ♻️ SO_REUSEADDR — что даёт и чего нет
-
-**Даёт:** чаще можно снова `bind` сразу после завершения процесса (TIME_WAIT / «address already in use»).
-
-**Не даёт:**
-
-- одинаковую семантику «два процесса на одном порту» на Win и Linux;
-- безопасность (это не authentication)
-
-Ошибка `setsockopt(SO_REUSEADDR)` **игнорируется** — bind всё равно пробуется.
-
----
-
-## 🚫 Ограничения
-
-1. **Один accept за раз в вашем коде** — параллель делайте сами (потоки / очередь).
-2. **Блокирующий accept** — без таймаута на listen-сокете (отдельного API нет) может ждать вечно.
-3. Нет `accept4` / cloexec convenience.
-4. **IPv4 only.**
-5. Accepted peer **не** наследует server-timeouts — `setTimeouts` на `TcpSocket` отдельно.
-
----
-
-## 🩹 Типичные ошибки
-
-| Симптом | Частая причина |
-|---------|----------------|
-| `listen` false | порт занят, нет прав на порт &lt; 1024, кривой IP |
-| `accept` nullptr | listen не был успешен; или прерванный accept |
-| «висит» | норма для blocking accept без клиента |
-
----
-
-## 🔗 Связанные модули
-
-- [tcp-socket.md](tcp-socket.md);
-- examples: `examples/server.cpp`
+См. `examples/server.cpp`, `tests/loopback.cpp`.

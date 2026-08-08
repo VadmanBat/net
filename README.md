@@ -3,198 +3,156 @@
 [![C++](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat&logo=c%2B%2B)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.31+-064F8C?style=flat&logo=cmake)](https://cmake.org/)
 
-**net** — небольшая статическая C++ библиотека для **блокирующего TCP** (клиент / сервер) и простой передачи файлов.
+**net** — статическая C++17 библиотека: тонкая оболочка над блокирующим TCP (Windows / POSIX) и простой передачей
+файлов.
 
 ---
 
 ## 🎯 Назначение
 
-**Зачем существует:** дать в своих C++-проектах тонкий, переносимый (Windows + POSIX) слой «сделай TCP и при необходимости перешли файл», без framework'а и без зависимости от Asio / libuv / HTTP-стека.
+Предоставить **простые C++-функции** для сетевого взаимодействия: установить TCP-соединение, слушать порт, принять
+клиента, отправить и принять байты, при необходимости передать файл.
 
-**Какой минимум должен работать качественно:**
+Библиотека — **базовый слой**, а не сетевой фреймворк. Поверх неё можно строить своё:
 
-| Минимум | Смысл «качественно» |
-|---------|---------------------|
-| Клиент TCP | `connect` по IPv4, полный `send`, честный `recv`, RAII close, move-only ownership |
-| Сервер TCP | `listen` + `accept` → `unique_ptr<TcpSocket>`, `SO_REUSEADDR`, cleanup на fail |
-| Байты / файл | send-loop без обрезания, `receive_exact` / size+payload для файла, disconnect при сбое mid-transfer |
-| Платформы | Winsock init скрыт; один API на Win и POSIX |
+- протоколы сообщений и framing;
+- IPv6, TLS, HTTP / WebSocket;
+- неблокирующий I/O, пулы соединений, reconnect;
+- zero-copy / тюнинг TCP под max throughput;
+- серверы с множеством клиентов и своей моделью потоков
 
-**Скорость:** не «выжать канал на максимум» (нет `sendfile`, `TCP_NODELAY`, тюнинга буферов, zero-copy, pipeline). Цель по throughput — **разумный default**: bulk без глупых мелких write, буфер файла 64 КиБ, минимум слоёв. Для localhost / LAN этого обычно хватает; для 10G / WAN max — отдельная работа.
+**Качество минимума:** полный `send`, cleanup fd, `inet_pton`, RAII, move-only, Winsock init, опции (`NODELAY`, buffers,
+timeouts), live `isConnected`, `receive_exact` и file size+payload.
 
-**Не цель:** TLS, IPv6, async/epoll, high-load сервер, rich error codes, «магический» reconnect.
-
-Итого одной фразой: **корректный синхронный TCP-минимум для встраивания**, а не сетевой фреймворк и не perf-чемпион.
-
----
-
-## ✨ Что есть
-
-- `TcpSocket` — connect / send / recv / timeouts / remote IP;
-- `TcpServer` — listen / accept (IPv4);
-- `file-transfer` — отправка/приём файла с progress callback и network-endian `uint64`;
-- авто-`WSAStartup` / `WSACleanup` на Windows через `NetInitializer`
-
-### Чего нет (и не обещается)
-
-- TLS / шифрование;
-- IPv6;
-- неблокирующие сокеты, epoll/IOCP, async API;
-- HTTP, WebSocket, мультиплексирование, reconnect-policy;
-- unit-тесты и CI-матрица в репозитории
+**Скорость:** разумный default (send-loop, буфер файла 64 KiБ), без претензии выжать канал на максимум.
 
 ---
 
-## 📦 Модули
+## ✨ Модули
 
-| Модуль | Назначение | Ключевое |
-|--------|------------|----------|
-| **TcpSocket** | TCP-клиент / peer | connect, send loop, recv, timeouts, move-only |
-| **TcpServer** | TCP-сервер | listen + SO_REUSEADDR, accept → `unique_ptr<TcpSocket>` |
-| **file-transfer** | Файлы по открытому TCP | size (`uint64` BE) + payload, progress, disconnect при сбое |
-| **NetInitializer** | Платформенная инициализация | singleton из конструкторов сокета/сервера |
+| Модуль | Роль |
+|--------|------|
+| [**Настройка сокета**](docs/socket-options.md) | **гайд для начинающих: `SocketOptions` / `ServerOptions`** |
+| [TcpSocket](docs/tcp-socket.md) | клиент / peer: connect, send, recv, опции |
+| [TcpServer](docs/tcp-server.md) | listen, accept, `ServerOptions` |
+| [file-transfer](docs/file-transfer.md) | файл и примитивы |
+| [NetInitializer](docs/net-initializer.md) | Winsock |
 
-### Платформы и стандарт
+- C++17+ (при C++23 — `std::byteswap`);
+- IPv4, TCP, блокирующий I/O;
+- Windows (`ws2_32`) и POSIX
 
-- **C++17** минимум (`cxx_std_17`); при C++23 — `std::byteswap`, иначе fallback;
-- **Windows** (`ws2_32`) и **POSIX**;
-- только **IPv4**
+Подробнее: [docs/README.md](docs/README.md).
 
 ---
 
 ## 🚀 Быстрый старт
 
-### 🛠️ Сборка (как отдельный проект)
+### Сборка
 
-CMake **3.31+**, C++17, внешних зависимостей нет (на Windows — `ws2_32`).
+CMake **3.31+**, C++17.
 
 ```bash
 mkdir build && cd build
 cmake ..
 cmake --build .
-# examples (только top-level):
-#   server.exe / client.exe  — Windows
-#   ./server   / ./client    — Unix
+# top-level: server / client (examples)
 ```
 
-### 📦 Подключение в другой проект
+### В другой проект
 
 ```cmake
 add_subdirectory(path/to/net)
-
-add_executable(my_app main.cpp)
 target_link_libraries(my_app PRIVATE net::net)
 ```
 
-Публичные заголовки: `#include <net/...>` через target `net::net`.  
-При `add_subdirectory` examples **не** собираются (`PROJECT_IS_TOP_LEVEL`).
+`#include <net/...>`. При `add_subdirectory` examples не собираются.
 
-### 💡 Минимальный обмен
-
-Сначала сервер, потом клиент (см. `examples/`).
+### Пример
 
 ```cpp
 // server
 #include <net/tcp-server.h>
 
-int main() {
-    net::TcpServer server;
-    if (!server.listen("0.0.0.0", 50235))
-        return 1;
-
-    auto peer = server.acceptConnection(); // блокируется
-    if (!peer)
-        return 1;
-
-    auto data = peer->receiveBytes(1024);
-    // data.empty() — ошибка, таймаут, close, либо 0 байт
-}
+net::TcpServer server;
+server.listen("0.0.0.0", 50235);
+auto peer = server.acceptConnection();
+auto data = peer->receiveBytes(1024);
 ```
 
 ```cpp
 // client
 #include <net/tcp-socket.h>
-#include <string>
 #include <vector>
 
-int main() {
-    net::TcpSocket client;
-    if (!client.connect("127.0.0.1", 50235))
-        return 1;
-
-    const std::string msg = "hello\n";
-    const std::vector<std::uint8_t> bytes(msg.begin(), msg.end());
-    return client.sendBytes(bytes) ? 0 : 1;
-}
+net::TcpSocket client;
+client.connect("127.0.0.1", 50235);
+const std::vector<std::uint8_t> msg{'h','i','\n'};
+client.sendBytes(msg);
 ```
+
+См. `examples/client.cpp`, `examples/server.cpp`.
 
 ---
 
-## 📁 Структура проекта
+## 📁 Структура
 
 ```
 net/
-├── include/net/
-│   ├── tcp-socket.h
-│   ├── tcp-server.h
-│   ├── file-transfer.h
-│   └── net-initializer.h
+├── include/net/          # tcp-socket.h, tcp-server.h, …
 ├── src/net/
-│   ├── tcp-socket.cpp
-│   ├── tcp-server.cpp
+│   ├── tcp-socket/       # tcp-socket, setters, getters, io
+│   ├── tcp-server/       # tcp-server.cpp
 │   ├── file-transfer.cpp
 │   └── net-initializer.cpp
 ├── examples/
-│   ├── client.cpp
-│   └── server.cpp
 ├── docs/
-│   ├── README.md
-│   ├── tcp-socket.md
-│   ├── tcp-server.md
-│   ├── file-transfer.md
-│   └── net-initializer.md
 ├── CMakeLists.txt
 └── README.md
 ```
 
 ---
 
-## 📚 Документация
+## 🧪 Тесты
 
-- [docs/README.md](docs/README.md) — оглавление;
-- [TcpSocket](docs/tcp-socket.md);
-- [TcpServer](docs/tcp-server.md);
-- [file-transfer](docs/file-transfer.md);
-- [NetInitializer](docs/net-initializer.md)
+Только top-level сборка. Loopback на `127.0.0.1` (один ПК, server+client в потоках).
+
+```bash
+cmake --build build
+ctest --test-dir build --output-on-failure
+# или: ./net-tests   /  net-tests.exe
+```
+
+Сценарии: connect fail, echo, `receive_exact` / `uint64`, опции сокета, `isConnected` после close peer, file-transfer.
 
 ---
 
-## ⚠️ Модель ошибок
+## ⚠️ Ошибки и блокировки
 
-Почти весь API: `bool` / `Ssize` / `nullptr` — **без** исключений и без `errno` / `WSAGetLastError` наружу.
+Горячий путь (`send` / `recv`) **не** строит строки и **не** логирует. При сбое syscall сохраняется только код ОС (`lastOsError()` — дешёво).
 
-| Результат | Смысл (примерно) |
-|-----------|------------------|
-| `false` / `-1` | ошибка сокета, невалидный IP, disconnect mid-transfer |
-| `nullptr` | `accept` fail / сервер не listening |
-| `0` от recv | peer закрыл (на части платформ таймаут может выглядеть иначе) |
-| `true` / `> 0` | ок |
+Подробный отчёт — **по запросу**:
 
-**Таймауты** (`setTimeouts`) — главный способ не зависнуть навсегда на blocking `accept` / `recv` / `send`.
+```cpp
+if (!sock.connect(ip, port))
+    std::cerr << sock.statusText(); // или sock.status()
+```
+
+| Результат | Типичный смысл |
+|-----------|----------------|
+| `false` / `-1` | сбой; смотри `lastOsError()` / `status()` |
+| `nullptr` | accept не удался |
+| `0` (recv) | peer закрыл соединение |
+| `true` / `> 0` | успех |
+
+Вызовы блокирующие: `TcpSocket::setTimeouts`.
 
 ---
 
 ## 📌 Статус
 
-Личная / утилитарная библиотека для встраивания в свои C++ проекты.
-
-**Фокус:** корректный синхронный TCP-минимум, Windows + POSIX, простой file transfer.  
-**Не фокус:** high-load, security stack, max throughput, framework.
-
-Баги и предложения — welcome.
-
----
+Утилитарная библиотека для встраивания в C++-проекты. Баги и предложения — welcome.
 
 ## 📄 License
 
-Лицензионный файл в репозитории **не зафиксирован**. Уточняйте у автора, если копируете код вовне.
+[MIT](LICENSE) — Copyright (c) 2025 Vadim.

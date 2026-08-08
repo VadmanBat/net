@@ -1,124 +1,90 @@
 # TcpSocket 🔌
 
 **Заголовок:** `include/net/tcp-socket.h`  
-**Реализация:** `src/net/tcp-socket.cpp`
+**Реализация:** `src/net/tcp-socket/`
 
-`TcpSocket` — обёртка над одним TCP-сокетом: клиент (`connect`) или peer после `TcpServer::acceptConnection`.
+| Файл | Содержимое |
+|------|------------|
+| `tcp-socket.cpp` | ctor/dtor/move, `connect`, `disconnect` |
+| `setters.cpp` | `setOptions`, `setNoDelay`, buffers, timeouts, … |
+| `getters.cpp` | `noDelay`, `isConnected`, `remoteIp`, … |
+| `io.cpp` | `sendBytes`, `receiveBytes` |
+| `status.cpp` | `status`, `statusText`, `lastOsError`, note/clear error |
 
-Это **не** connection pool, **не** async socket и **не** stream с буферизацией приложения.
-
----
-
-## ✨ Возможности
-
-- `connect(ip, port)` / `disconnect()`;
-- полный `sendBytes` (цикл, пока не уйдёт всё или ошибка);
-- `receiveBytes` — **один** системный `recv` (не «дочитать до N»);
-- `setTimeouts(send_sec, recv_sec)` — `SO_SNDTIMEO` / `SO_RCVTIMEO`;
-- `remoteIp()` — IPv4 peer через `getpeername` + `inet_ntop`;
-- copy **запрещён**, move **есть**;
-- деструктор вызывает `disconnect()` (shutdown + close)
-
-Тип `net::Ssize` (`std::ptrdiff_t`) — возврат recv: число байт или `-1`.
+Один TCP-сокет: исходящее соединение или peer после accept.
 
 ---
 
-## 🚀 Быстрый старт
+## API
+
+| Метод | Описание |
+|-------|----------|
+| `connect(ip, port)` | IPv4; `inet_pton` + `connect`; при ошибке fd закрыт |
+| `disconnect()` | `shutdown` + close |
+| `setOptions(SocketOptions)` | применить только заданные `optional` поля |
+| `setNoDelay` / `noDelay` | `TCP_NODELAY` |
+| `setKeepAlive` / `keepAlive` | `SO_KEEPALIVE` |
+| `setSendBufferSize` / `sendBufferSize` | `SO_SNDBUF` (set: bytes > 0) |
+| `setRecvBufferSize` / `recvBufferSize` | `SO_RCVBUF` |
+| `setTimeouts(send_sec, recv_sec)` | `SO_SNDTIMEO` / `SO_RCVTIMEO` |
+
+`SocketOptions`: `no_delay`, `keep_alive`, `send/recv_buffer_size`, `send/recv_timeout_sec` — всё `std::optional`.
+
+**Как настроить с нуля (простым языком):** [socket-options.md](socket-options.md).
+| `sendBytes` | полный send (цикл, чанки ≤ `INT_MAX`) |
+| `receiveBytes(buf, max)` | один `recv` → `Ssize` |
+| `receiveBytes(max)` | аллокация; default max = 64 KiB |
+| `isConnected()` | live-проверка (см. ниже) |
+| `remoteIp()` | IPv4 peer |
+| `lastOsError()` | код ОС после последней неудачи (0 = нет); **O(1)** |
+| `status()` / `statusText()` | полный снимок (адреса, опции, ошибка, текст); **только по запросу** |
+
+Copy deleted, move supported. Деструктор → `disconnect()`.  
+`net::Ssize` = `std::ptrdiff_t`.
+
+Опции до `set*` не трогаются — default ОС. Getters — `getsockopt`.
+
+**Производительность:** `send`/`recv` не форматируют сообщения. При fail — запись `int` error code. `status()` дороже (probe + getsockopt + string) — для отладки / логов после ошибки.
+
+---
+
+## `isConnected()`
+
+1. нет fd → false;  
+2. `getpeername` fail → false;  
+3. `select` (0 timeout): нет ready → true;  
+4. `recv(..., MSG_PEEK)`: `0` → peer закрыл; `>0` → true; would-block → true; иначе false.
+
+Обновляет внутренний `connected_`. Не заменяет keepalive: «тихий» half-open без FIN может ещё считаться true, пока стек не узнает.
+
+---
+
+## Пример
 
 ```cpp
 #include <net/tcp-socket.h>
-#include <vector>
-#include <cstdint>
 
 net::TcpSocket sock;
 if (!sock.connect("127.0.0.1", 50235))
-    return; // невалидный IP, отказ connect, нет маршрута, ...
+    return;
 
-sock.setTimeouts(/*send*/ 30, /*recv*/ 30);
+net::SocketOptions opts;
+opts.no_delay         = true;
+opts.send_buffer_size = 1 << 20;
+opts.recv_buffer_size = 1 << 20;
+opts.send_timeout_sec = 30;
+opts.recv_timeout_sec = 30;
+sock.setOptions(opts);
 
 const std::uint8_t payload[] = {1, 2, 3};
-if (!sock.sendBytes(payload, sizeof(payload)))
+sock.sendBytes(payload, sizeof(payload));
+
+if (!sock.isConnected())
     return;
 
 std::uint8_t buf[256];
 const net::Ssize n = sock.receiveBytes(buf, sizeof(buf));
-if (n < 0) {
-    // ошибка / (часто) таймаут
-} else if (n == 0) {
-    // peer закрыл (на части платформ таймаут тоже может выглядеть иначе — проверяйте)
-} else {
-    // n байт в buf
-}
 ```
 
-Векторный recv аллоцирует `max_size`, затем `resize` до фактически принятого:
-
-```cpp
-auto chunk = sock.receiveBytes(4096); // default max = 64 KiB
-```
-
-Default **64 KiB**, не мегабайт — чтобы случайный вызов не жрал кучу впустую.
-
----
-
-## 📋 API (сжато)
-
-| Метод | Возврат | Поведение |
-|-------|---------|-----------|
-| `connect(ip, port)` | `bool` | IPv4 only; `inet_pton` обязан вернуть 1; при fail сокет закрыт |
-| `disconnect()` | `bool` (всегда true) | `shutdown(RDWR)` + close; идемпотентно |
-| `setTimeouts(send, recv)` | `bool` | секунды → Win: мс `DWORD`; POSIX: `timeval` |
-| `sendBytes(ptr, size)` | `bool` | цикл; чанки ≤ `INT_MAX`; size==0 → true при connected |
-| `sendBytes(vector)` | `bool` | делегирует в ptr/size |
-| `receiveBytes(buf, max)` | `Ssize` | **один** `recv`; max чанкуется до `INT_MAX` |
-| `receiveBytes(max)` | `vector` | аллокация max, resize по факту; пустой = ошибка/0 байт |
-| `isConnected()` | `bool` | флаг библиотеки, **не** live-probe TCP |
-| `remoteIp()` | `string` | `""` если не connected / getpeername fail |
-
-Конструктор `TcpSocket(SOCKET)` — для accept: помечает `connected_ = true` **без** проверки, что fd жив.
-
----
-
-## ⚠️ Важные нюансы
-
-### `receiveBytes` ≠ `receive_exact`
-
-Один вызов recv может вернуть меньше, чем вы ждали. Для «ровно N байт» — `net::receive_exact` в [file-transfer.md](file-transfer.md).
-
-### `isConnected()` врёт после half-close peer'а
-
-Флаг ставится при `connect`/`accept` и сбрасывается при `disconnect`.  
-Обрыв сети или `close` с той стороны **сами** флаг не сбрасывают — узнаете на следующем send/recv.
-
-### `sendBytes` и нулевой указатель
-
-При `size > 0` и `data == nullptr` → `false`. При `size == 0` отправка не делается, `true`, если `connected_`.
-
-### Таймауты
-
-Единственный встроенный анти-hang. «Таймаут vs close» на Win/POSIX слегка различается; ошибка recv → `-1`, close peer часто → `0`.  
-**Не полагайтесь** на тонкое различие без проверки на целевой ОС.
-
-### Потоки
-
-Один `TcpSocket` из нескольких потоков без внешней блокировки — data race / UB. Не делайте так.
-
----
-
-## 🚫 Ограничения
-
-| Есть | Нет |
-|------|-----|
-| IPv4 | IPv6, dual-stack |
-| блокирующий TCP | non-blocking, poll/select API |
-| move ownership | copy, shared ownership внутри класса |
-| raw bytes | message framing (кроме своего) |
-| `bool` / `Ssize` | исключения, `std::error_code`, текст ошибки |
-
----
-
-## 🔗 Связанные модули
-
-- [tcp-server.md](tcp-server.md) — accept;
-- [file-transfer.md](file-transfer.md) — `receive_exact`, файлы;
-- [net-initializer.md](net-initializer.md) — Winsock
+- `receiveBytes` — один `recv`; для ровно N байт — `net::receive_exact`.
+- Один сокет — из одного потока.
