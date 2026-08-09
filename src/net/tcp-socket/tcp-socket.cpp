@@ -7,7 +7,6 @@
 #endif
 
 namespace net {
-
 TcpSocket::TcpSocket() {
     NetInitializer::ensureInitialized();
 }
@@ -23,6 +22,10 @@ TcpSocket::TcpSocket(TcpSocket&& other) noexcept
     other.last_os_error_ = 0;
 }
 
+TcpSocket::~TcpSocket() {
+    disconnect();
+}
+
 TcpSocket& TcpSocket::operator=(TcpSocket&& other) noexcept {
     if (this != &other) {
         disconnect();
@@ -34,10 +37,6 @@ TcpSocket& TcpSocket::operator=(TcpSocket&& other) noexcept {
         other.last_os_error_ = 0;
     }
     return *this;
-}
-
-TcpSocket::~TcpSocket() {
-    disconnect();
 }
 
 bool TcpSocket::connect(const std::string& ip, const std::uint16_t port) {
@@ -85,5 +84,4 @@ bool TcpSocket::disconnect() {
     connected_ = false;
     return true;
 }
-
-} // namespace net
+}

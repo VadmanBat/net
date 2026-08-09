@@ -27,10 +27,8 @@ constexpr int SOCKET_ERROR      = -1;
 #endif
 
 namespace net {
-
 using Ssize = std::ptrdiff_t;
 
-/// Socket tuning. Empty optionals = leave OS default / do not call setsockopt.
 struct SocketOptions {
     std::optional<bool> no_delay;
     std::optional<bool> keep_alive;
@@ -40,7 +38,6 @@ struct SocketOptions {
     std::optional<unsigned> recv_timeout_sec;
 };
 
-/// Snapshot of socket state. Built only when status() / statusText() is called — not on send/recv.
 struct SocketStatus {
     bool has_socket     = false;
     bool flag_connected = false;
@@ -63,7 +60,6 @@ struct SocketStatus {
 };
 
 class TcpSocket {
-private:
     SOCKET sock_               = INVALID_SOCKET;
     mutable bool connected_    = false;
     mutable int last_os_error_ = 0;
@@ -77,11 +73,10 @@ private:
 public:
     TcpSocket();
     explicit TcpSocket(SOCKET existing_socket);
-
-    TcpSocket(const TcpSocket&)            = delete;
-    TcpSocket& operator=(const TcpSocket&) = delete;
-
+    TcpSocket(const TcpSocket&) = delete;
     TcpSocket(TcpSocket&& other) noexcept;
+
+    TcpSocket& operator=(const TcpSocket&) = delete;
     TcpSocket& operator=(TcpSocket&& other) noexcept;
 
     ~TcpSocket();
@@ -89,35 +84,28 @@ public:
     bool connect(const std::string& ip, std::uint16_t port);
     bool disconnect();
 
-    /// Apply only fields that are set (optional has_value).
-    [[nodiscard]] bool setOptions(const SocketOptions& options) const;
-
-    [[nodiscard]] bool setNoDelay(bool enabled) const;
-    [[nodiscard]] bool noDelay() const;
-
-    [[nodiscard]] bool setKeepAlive(bool enabled) const;
-    [[nodiscard]] bool keepAlive() const;
-
-    [[nodiscard]] bool setSendBufferSize(std::size_t bytes) const;
-    [[nodiscard]] bool setRecvBufferSize(std::size_t bytes) const;
-    [[nodiscard]] std::size_t sendBufferSize() const;
-    [[nodiscard]] std::size_t recvBufferSize() const;
-
-    [[nodiscard]] bool setTimeouts(unsigned send_timeout_sec, unsigned recv_timeout_sec) const;
-
     [[nodiscard]] bool sendBytes(const std::uint8_t* data, std::size_t size) const;
     [[nodiscard]] bool sendBytes(const std::vector<std::uint8_t>& data) const;
 
     [[nodiscard]] Ssize receiveBytes(std::uint8_t* buffer, std::size_t max_size = 64 * 1024) const;
     [[nodiscard]] std::vector<std::uint8_t> receiveBytes(std::size_t max_size = 64 * 1024) const;
 
+    [[nodiscard]] bool setNoDelay(bool enabled) const;
+    [[nodiscard]] bool setKeepAlive(bool enabled) const;
+    [[nodiscard]] bool setSendBufferSize(std::size_t bytes) const;
+    [[nodiscard]] bool setRecvBufferSize(std::size_t bytes) const;
+    [[nodiscard]] bool setTimeouts(unsigned send_timeout_sec, unsigned recv_timeout_sec) const;
+    [[nodiscard]] bool setOptions(const SocketOptions& options) const;
+
     [[nodiscard]] bool isConnected() const;
-    [[nodiscard]] std::string remoteIp() const;
 
+    [[nodiscard]] bool noDelay() const;
+    [[nodiscard]] bool keepAlive() const;
+    [[nodiscard]] std::size_t sendBufferSize() const;
+    [[nodiscard]] std::size_t recvBufferSize() const;
     [[nodiscard]] int lastOsError() const noexcept;
-
     [[nodiscard]] SocketStatus status() const;
     [[nodiscard]] std::string statusText() const;
+    [[nodiscard]] std::string remoteIp() const;
 };
-
-} // namespace net
+}

@@ -7,9 +7,7 @@
 #endif
 
 namespace net {
-
 namespace {
-
 bool socket_error_is_would_block() {
 #ifdef _WIN32
     const int err = WSAGetLastError();
@@ -18,8 +16,7 @@ bool socket_error_is_would_block() {
     return errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR;
 #endif
 }
-
-} // namespace
+}
 
 bool TcpSocket::get_sock_opt_int(const int level, const int opt_name, int& value) const {
     if (sock_ == INVALID_SOCKET)
@@ -31,34 +28,6 @@ bool TcpSocket::get_sock_opt_int(const int level, const int opt_name, int& value
     socklen_t len = sizeof(value);
     return getsockopt(sock_, level, opt_name, &value, &len) == 0;
 #endif
-}
-
-bool TcpSocket::noDelay() const {
-    int value = 0;
-    if (!get_sock_opt_int(IPPROTO_TCP, TCP_NODELAY, value))
-        return false;
-    return value != 0;
-}
-
-bool TcpSocket::keepAlive() const {
-    int value = 0;
-    if (!get_sock_opt_int(SOL_SOCKET, SO_KEEPALIVE, value))
-        return false;
-    return value != 0;
-}
-
-std::size_t TcpSocket::sendBufferSize() const {
-    int value = 0;
-    if (!get_sock_opt_int(SOL_SOCKET, SO_SNDBUF, value) || value < 0)
-        return 0;
-    return static_cast<std::size_t>(value);
-}
-
-std::size_t TcpSocket::recvBufferSize() const {
-    int value = 0;
-    if (!get_sock_opt_int(SOL_SOCKET, SO_RCVBUF, value) || value < 0)
-        return 0;
-    return static_cast<std::size_t>(value);
 }
 
 bool TcpSocket::isConnected() const {
@@ -103,7 +72,7 @@ bool TcpSocket::isConnected() const {
         return true;
     }
 
-    char byte         = 0;
+    char byte        = 0;
     const int peeked = recv(sock_, &byte, 1, MSG_PEEK);
     if (peeked == 0) {
         connected_ = false;
@@ -121,6 +90,34 @@ bool TcpSocket::isConnected() const {
 
     connected_ = false;
     return false;
+}
+
+bool TcpSocket::noDelay() const {
+    int value = 0;
+    if (!get_sock_opt_int(IPPROTO_TCP, TCP_NODELAY, value))
+        return false;
+    return value != 0;
+}
+
+bool TcpSocket::keepAlive() const {
+    int value = 0;
+    if (!get_sock_opt_int(SOL_SOCKET, SO_KEEPALIVE, value))
+        return false;
+    return value != 0;
+}
+
+std::size_t TcpSocket::sendBufferSize() const {
+    int value = 0;
+    if (!get_sock_opt_int(SOL_SOCKET, SO_SNDBUF, value) || value < 0)
+        return 0;
+    return static_cast<std::size_t>(value);
+}
+
+std::size_t TcpSocket::recvBufferSize() const {
+    int value = 0;
+    if (!get_sock_opt_int(SOL_SOCKET, SO_RCVBUF, value) || value < 0)
+        return 0;
+    return static_cast<std::size_t>(value);
 }
 
 std::string TcpSocket::remoteIp() const {
@@ -143,5 +140,4 @@ std::string TcpSocket::remoteIp() const {
         return {};
     return {ip_str};
 }
-
-} // namespace net
+}

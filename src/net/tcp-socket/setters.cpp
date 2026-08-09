@@ -7,7 +7,6 @@
 #endif
 
 namespace net {
-
 bool TcpSocket::set_sock_opt_int(const int level, const int opt_name, const int value) const {
     if (sock_ == INVALID_SOCKET)
         return false;
@@ -23,27 +22,6 @@ bool TcpSocket::set_sock_opt_int(const int level, const int opt_name, const int 
     }
 #endif
     return true;
-}
-
-bool TcpSocket::setOptions(const SocketOptions& options) const {
-    bool ok = true;
-    if (options.no_delay.has_value())
-        ok = setNoDelay(*options.no_delay) && ok;
-    if (options.keep_alive.has_value())
-        ok = setKeepAlive(*options.keep_alive) && ok;
-    if (options.send_buffer_size.has_value())
-        ok = setSendBufferSize(*options.send_buffer_size) && ok;
-    if (options.recv_buffer_size.has_value())
-        ok = setRecvBufferSize(*options.recv_buffer_size) && ok;
-
-    if (options.send_timeout_sec.has_value() || options.recv_timeout_sec.has_value()) {
-        const unsigned send_sec =
-            options.send_timeout_sec.value_or(options.recv_timeout_sec.value_or(0));
-        const unsigned recv_sec =
-            options.recv_timeout_sec.value_or(options.send_timeout_sec.value_or(0));
-        ok = setTimeouts(send_sec, recv_sec) && ok;
-    }
-    return ok;
 }
 
 bool TcpSocket::setNoDelay(const bool enabled) const {
@@ -72,13 +50,11 @@ bool TcpSocket::setTimeouts(const unsigned send_timeout_sec, const unsigned recv
 #ifdef _WIN32
     const DWORD send_ms = send_timeout_sec * 1000u;
     const DWORD recv_ms = recv_timeout_sec * 1000u;
-    if (setsockopt(sock_, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&send_ms), sizeof(send_ms)) !=
-        0) {
+    if (setsockopt(sock_, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&send_ms), sizeof(send_ms)) != 0) {
         note_os_error();
         return false;
     }
-    if (setsockopt(sock_, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&recv_ms), sizeof(recv_ms)) !=
-        0) {
+    if (setsockopt(sock_, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&recv_ms), sizeof(recv_ms)) != 0) {
         note_os_error();
         return false;
     }
@@ -101,4 +77,26 @@ bool TcpSocket::setTimeouts(const unsigned send_timeout_sec, const unsigned recv
     return true;
 }
 
-} // namespace net
+bool TcpSocket::setOptions(const SocketOptions& options) const {
+    if (options.no_delay.has_value())
+        if (!setNoDelay(*options.no_delay))
+            return false;
+    if (options.keep_alive.has_value())
+        if (!setKeepAlive(*options.keep_alive))
+            return false;
+    if (options.send_buffer_size.has_value())
+        if (!setSendBufferSize(*options.send_buffer_size))
+            return false;
+    if (options.recv_buffer_size.has_value())
+        if (!setRecvBufferSize(*options.recv_buffer_size))
+            return false;
+
+    if (options.send_timeout_sec.has_value() || options.recv_timeout_sec.has_value()) {
+        const unsigned send_sec = options.send_timeout_sec.value_or(options.recv_timeout_sec.value_or(0));
+        const unsigned recv_sec = options.recv_timeout_sec.value_or(options.send_timeout_sec.value_or(0));
+        return setTimeouts(send_sec, recv_sec);
+    }
+
+    return true;
+}
+}

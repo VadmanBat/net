@@ -3,13 +3,8 @@
 #include "net/net-initializer.h"
 
 namespace net {
-
 TcpServer::TcpServer() {
     NetInitializer::ensureInitialized();
-}
-
-TcpServer::~TcpServer() {
-    close();
 }
 
 TcpServer::TcpServer(TcpServer&& other) noexcept
@@ -17,6 +12,11 @@ TcpServer::TcpServer(TcpServer&& other) noexcept
     other.server_socket_ = INVALID_SOCKET;
     other.listening_     = false;
 }
+
+TcpServer::~TcpServer() {
+    close();
+}
+
 
 TcpServer& TcpServer::operator=(TcpServer&& other) noexcept {
     if (this != &other) {
@@ -30,14 +30,6 @@ TcpServer& TcpServer::operator=(TcpServer&& other) noexcept {
     return *this;
 }
 
-void TcpServer::setOptions(const ServerOptions& options) {
-    options_ = options;
-}
-
-const ServerOptions& TcpServer::options() const {
-    return options_;
-}
-
 bool TcpServer::listen(const std::string& ip, const std::uint16_t port, const int backlog) {
     if (listening_)
         close();
@@ -49,8 +41,7 @@ bool TcpServer::listen(const std::string& ip, const std::uint16_t port, const in
     if (options_.reuse_address) {
         constexpr int reuse = 1;
 #ifdef _WIN32
-        setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&reuse),
-                   sizeof(reuse));
+        setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&reuse), sizeof(reuse));
 #else
         setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 #endif
@@ -90,8 +81,7 @@ std::unique_ptr<TcpSocket> TcpServer::acceptConnection() const {
 #else
     socklen_t client_len = sizeof(client_addr);
 #endif
-    const SOCKET client_socket =
-        accept(server_socket_, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
+    const SOCKET client_socket = accept(server_socket_, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
     if (client_socket == INVALID_SOCKET)
         return nullptr;
 
@@ -108,8 +98,15 @@ void TcpServer::close() {
     listening_ = false;
 }
 
+void TcpServer::setOptions(const ServerOptions& options) {
+    options_ = options;
+}
+
+const ServerOptions& TcpServer::options() const {
+    return options_;
+}
+
 bool TcpServer::isListening() const {
     return listening_;
 }
-
-} // namespace net
+}

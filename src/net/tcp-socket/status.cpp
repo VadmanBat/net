@@ -19,11 +19,10 @@ std::string os_error_text(const int code) {
         return {};
 #ifdef _WIN32
     char* buffer = nullptr;
-    const DWORD n = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                                       FORMAT_MESSAGE_IGNORE_INSERTS,
-                                   nullptr, static_cast<DWORD>(code),
-                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                   reinterpret_cast<LPSTR>(&buffer), 0, nullptr);
+    const DWORD n =
+        FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                       nullptr, static_cast<DWORD>(code), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                       reinterpret_cast<LPSTR>(&buffer), 0, nullptr);
     if (n == 0 || buffer == nullptr)
         return "WSA/OS error " + std::to_string(code);
     std::string text(buffer, n);
@@ -77,19 +76,19 @@ int TcpSocket::lastOsError() const noexcept {
 
 SocketStatus TcpSocket::status() const {
     SocketStatus s;
-    s.has_socket     = sock_ != INVALID_SOCKET;
-    s.flag_connected = connected_;
-    s.last_os_error  = last_os_error_;
+    s.has_socket         = sock_ != INVALID_SOCKET;
+    s.flag_connected     = connected_;
+    s.last_os_error      = last_os_error_;
     s.last_os_error_text = os_error_text(last_os_error_);
 
     if (s.has_socket) {
         s.live_connected = isConnected();
         static_cast<void>(read_endpoint(sock_, false, s.local_ip, s.local_port));
         static_cast<void>(read_endpoint(sock_, true, s.remote_ip, s.remote_port));
-        s.no_delay          = noDelay();
-        s.keep_alive        = keepAlive();
-        s.send_buffer_size  = sendBufferSize();
-        s.recv_buffer_size  = recvBufferSize();
+        s.no_delay         = noDelay();
+        s.keep_alive       = keepAlive();
+        s.send_buffer_size = sendBufferSize();
+        s.recv_buffer_size = recvBufferSize();
     }
 
     std::ostringstream out;
@@ -97,10 +96,8 @@ SocketStatus TcpSocket::status() const {
         << "  has_socket:     " << (s.has_socket ? "yes" : "no") << '\n'
         << "  flag_connected: " << (s.flag_connected ? "yes" : "no") << '\n'
         << "  live_connected: " << (s.live_connected ? "yes" : "no") << '\n'
-        << "  local:          " << (s.local_ip.empty() ? "-" : s.local_ip) << ':' << s.local_port
-        << '\n'
-        << "  remote:         " << (s.remote_ip.empty() ? "-" : s.remote_ip) << ':' << s.remote_port
-        << '\n'
+        << "  local:          " << (s.local_ip.empty() ? "-" : s.local_ip) << ':' << s.local_port << '\n'
+        << "  remote:         " << (s.remote_ip.empty() ? "-" : s.remote_ip) << ':' << s.remote_port << '\n'
         << "  no_delay:       " << (s.no_delay ? "yes" : "no") << '\n'
         << "  keep_alive:     " << (s.keep_alive ? "yes" : "no") << '\n'
         << "  send_buf:       " << s.send_buffer_size << '\n'

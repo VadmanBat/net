@@ -1,9 +1,5 @@
 #include "test-harness.hpp"
 
-#include <net/file-transfer.h>
-#include <net/tcp-server.h>
-#include <net/tcp-socket.h>
-
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -11,6 +7,9 @@
 #include <filesystem>
 #include <fstream>
 #include <mutex>
+#include <net/file-transfer.h>
+#include <net/tcp-server.h>
+#include <net/tcp-socket.h>
 #include <string>
 #include <thread>
 #include <vector>
@@ -210,8 +209,8 @@ void test_socket_options() {
     std::thread server_thread([&] {
         net::TcpServer server;
         net::ServerOptions opts;
-        opts.reuse_address        = true;
-        opts.accepted.no_delay    = true;
+        opts.reuse_address             = true;
+        opts.accepted.no_delay         = true;
         opts.accepted.send_timeout_sec = 10;
         opts.accepted.recv_timeout_sec = 10;
         server.setOptions(opts);
@@ -227,7 +226,7 @@ void test_socket_options() {
             server_ok = false;
             return;
         }
-        peer_no_delay = peer->noDelay();
+        peer_no_delay  = peer->noDelay();
         std::uint8_t b = 0;
         static_cast<void>(peer->receiveBytes(&b, 1));
     });
@@ -319,9 +318,9 @@ void test_file_transfer() {
     Barrier listening;
     std::atomic_bool server_ok{true};
 
-    const fs::path dir    = fs::temp_directory_path() / "net-lib-tests";
-    const fs::path src    = dir / "src.bin";
-    const fs::path dst    = dir / "dst.bin";
+    const fs::path dir = fs::temp_directory_path() / "net-lib-tests";
+    const fs::path src = dir / "src.bin";
+    const fs::path dst = dir / "dst.bin";
     fs::create_directories(dir);
 
     std::vector<std::uint8_t> payload(50'000);
@@ -373,9 +372,7 @@ void test_file_transfer() {
 
     std::uint64_t last_sent = 0;
     const bool sent =
-        net::send_file_with_progress(client, src, [&](const std::uint64_t s, const std::uint64_t) {
-            last_sent = s;
-        });
+        net::send_file_with_progress(client, src, [&](const std::uint64_t s, const std::uint64_t) { last_sent = s; });
     net::test::expect(sent, "send_file_with_progress");
     net::test::expect(last_sent == payload.size(), "progress reached total");
 

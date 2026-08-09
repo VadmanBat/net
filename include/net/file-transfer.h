@@ -1,9 +1,10 @@
 #pragma once
 
+#include "net/tcp-socket.h"
+
 #include <cstdint>
 #include <filesystem>
 #include <functional>
-#include <net/tcp-socket.h>
 
 namespace fs = std::filesystem;
 
