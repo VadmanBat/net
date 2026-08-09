@@ -107,6 +107,9 @@ net/
 │   └── net-initializer.cpp
 ├── examples/
 ├── docs/
+├── cmake/
+│   ├── sources.cmake      # список .cpp библиотеки
+│   └── top-level.cmake    # examples + tests (только top-level)
 ├── CMakeLists.txt
 └── README.md
 ```
