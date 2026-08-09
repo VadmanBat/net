@@ -1,25 +1,26 @@
 # 🌐 net
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![C++](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat&logo=c%2B%2B)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.31+-064F8C?style=flat&logo=cmake)](https://cmake.org/)
 
-**net** — статическая C++17 библиотека: тонкая оболочка над блокирующим TCP (Windows / POSIX) и простой передачей
+**net** — статическая мини-библиотека: тонкая оболочка над блокирующим TCP (Windows / POSIX) и простой передачей
 файлов.
 
 ---
 
 ## 🎯 Назначение
 
-Предоставить **простые C++-функции** для сетевого взаимодействия: установить TCP-соединение, слушать порт, принять
+Предоставить **простейшие функции** для сетевого взаимодействия: установить TCP-соединение, слушать порт, принять
 клиента, отправить и принять байты, при необходимости передать файл.
 
-Библиотека — **базовый слой**, а не сетевой фреймворк. Поверх неё можно строить своё:
+Библиотека — **базовый слой**, а не сетевой фреймворк. Поверх неё можно строить следующее:
 
-- протоколы сообщений и framing;
-- IPv6, TLS, HTTP / WebSocket;
-- неблокирующий I/O, пулы соединений, reconnect;
-- zero-copy / тюнинг TCP под max throughput;
-- серверы с множеством клиентов и своей моделью потоков
+- протоколы сообщений;
+- TLS, HTTP / WebSocket;
+- неблокирующий I/O, пулы соединений;
+- тюнинг TCP для максимальной производительности;
+- серверы с множеством клиентов и своей моделью потоков.
 
 **Качество минимума:** полный `send`, cleanup fd, `inet_pton`, RAII, move-only, Winsock init, опции (`NODELAY`, buffers,
 timeouts), live `isConnected`, `receive_exact` и file size+payload.
@@ -30,15 +31,14 @@ timeouts), live `isConnected`, `receive_exact` и file size+payload.
 
 ## ✨ Модули
 
-| Модуль | Роль |
-|--------|------|
+| Модуль                                         | Роль                                                       |
+|------------------------------------------------|------------------------------------------------------------|
 | [**Настройка сокета**](docs/socket-options.md) | **гайд для начинающих: `SocketOptions` / `ServerOptions`** |
-| [TcpSocket](docs/tcp-socket.md) | клиент / peer: connect, send, recv, опции |
-| [TcpServer](docs/tcp-server.md) | listen, accept, `ServerOptions` |
-| [file-transfer](docs/file-transfer.md) | файл и примитивы |
-| [NetInitializer](docs/net-initializer.md) | Winsock |
+| [Сокет](docs/tcp-socket.md)                    | клиент / peer: connect, send, recv, опции                  |
+| [Сервер](docs/tcp-server.md)                   | listen, accept, `ServerOptions`                            |
+| [Передача файла](docs/file-transfer.md)        | файл и примитивы                                           |
 
-- C++17+ (при C++23 — `std::byteswap`);
+- C++17;
 - IPv4, TCP, блокирующий I/O;
 - Windows (`ws2_32`) и POSIX
 
@@ -48,7 +48,7 @@ timeouts), live `isConnected`, `receive_exact` и file size+payload.
 
 ## 🚀 Быстрый старт
 
-### Сборка
+### 🛠️ Сборка
 
 CMake **3.31+**, C++17.
 
@@ -59,16 +59,16 @@ cmake --build .
 # top-level: server / client (examples)
 ```
 
-### В другой проект
+### 📁️ В другой проект
 
 ```cmake
 add_subdirectory(path/to/net)
 target_link_libraries(my_app PRIVATE net::net)
 ```
 
-`#include <net/...>`. При `add_subdirectory` examples не собираются.
+Подключение: `#include <net/...>`.
 
-### Пример
+### 💡 Примеры
 
 ```cpp
 // server
@@ -115,7 +115,7 @@ net/
 
 ## 🧪 Тесты
 
-Только top-level сборка. Loopback на `127.0.0.1` (один ПК, server+client в потоках).
+Loopback на `127.0.0.1` (один ПК, server + client в потоках).
 
 ```bash
 cmake --build build
@@ -129,7 +129,8 @@ ctest --test-dir build --output-on-failure
 
 ## ⚠️ Ошибки и блокировки
 
-Горячий путь (`send` / `recv`) **не** строит строки и **не** логирует. При сбое syscall сохраняется только код ОС (`lastOsError()` — дешёво).
+Горячий путь (`send` / `recv`) **НЕ** строит строки и **НЕ** логирует. При сбое syscall сохраняется только код ОС (
+`lastOsError()` — дешёво).
 
 Подробный отчёт — **по запросу**:
 
@@ -138,12 +139,12 @@ if (!sock.connect(ip, port))
     std::cerr << sock.statusText(); // или sock.status()
 ```
 
-| Результат | Типичный смысл |
-|-----------|----------------|
+| Результат      | Типичный смысл                            |
+|----------------|-------------------------------------------|
 | `false` / `-1` | сбой; смотри `lastOsError()` / `status()` |
-| `nullptr` | accept не удался |
-| `0` (recv) | peer закрыл соединение |
-| `true` / `> 0` | успех |
+| `nullptr`      | accept не удался                          |
+| `0` (recv)     | peer закрыл соединение                    |
+| `true` / `> 0` | успех                                     |
 
 Вызовы блокирующие: `TcpSocket::setTimeouts`.
 
@@ -151,7 +152,7 @@ if (!sock.connect(ip, port))
 
 ## 📌 Статус
 
-Утилитарная библиотека для встраивания в C++-проекты. Баги и предложения — welcome.
+Утилитарная библиотека для встраивания в C++-проекты.
 
 ## 📄 License
 
