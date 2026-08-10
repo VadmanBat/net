@@ -25,12 +25,12 @@ struct ServerOptions {
 
 ## ⚡ API
 
-| Метод                           | Описание                               |
-|---------------------------------|----------------------------------------|
-| `setOptions` / `options`        | вся политика сервера                   |
-| `listen(ip, port, backlog = 5)` | bind + listen                          |
-| `acceptConnection()`            | peer + `setOptions(options_.accepted)` |
-| `close()` / `isListening()`     |                                        |
+| Метод                           | Описание                                                 |
+|---------------------------------|----------------------------------------------------------|
+| `setOptions` / `options`        | вся политика сервера                                     |
+| `listen(ip, port, backlog = 5)` | bind + listen                                            |
+| `acceptConnection()`            | peer + `setOptions(options_.accepted)`                   |
+| `close()` / `isListening()`     | закрыть listen-сокет; `true`, если сервер сейчас слушает |
 
 ---
 
