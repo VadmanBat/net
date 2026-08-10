@@ -39,9 +39,9 @@ timeouts), live `isConnected`, `receive_exact` и file size+payload.
 | [🖥️ Сервер](docs/classes/tcp-server.md)           | класс `TcpServer`           |
 | [📁 Передача файла](docs/classes/file-transfer.md) | свободные функции           |
 
-- C++17;
+- C++17+;
 - IPv4, TCP, блокирующий I/O;
-- Windows (`ws2_32`) и POSIX
+- Windows (`ws2_32`) и POSIX.
 
 Подробнее: [docs/README.md](docs/README.md).
 
@@ -51,7 +51,7 @@ timeouts), live `isConnected`, `receive_exact` и file size+payload.
 
 ### 🛠️ Сборка
 
-CMake **3.21+**, C++17.
+CMake **3.21+**, C++17+.
 
 ```bash
 mkdir build && cd build
