@@ -1,7 +1,7 @@
 # 🌐 net
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![C++](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat&logo=c%2B%2B)](https://isocpp.org/)
+[![C++](https://img.shields.io/badge/C%2B%2B-17+-00599C?style=flat&logo=c%2B%2B)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.21+-064F8C?style=flat&logo=cmake)](https://cmake.org/)
 
 **net** — статическая мини-библиотека: тонкая оболочка над блокирующим TCP (Windows / POSIX) и простой передачей
