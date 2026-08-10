@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.21)
 project(net VERSION 1.0 LANGUAGES CXX)
 
 include(cmake/sources.cmake)
