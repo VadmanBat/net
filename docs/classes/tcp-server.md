@@ -1,9 +1,25 @@
 # TcpServer 🖥️
 
-**Заголовки:** `include/net/tcp-server.h`, `include/net/server-options.h`  
+**Заголовки:** `include/net/tcp-server.h`, `include/net/server/server-options.h`  
 **Реализация:** `src/net/tcp-server/tcp-server.cpp`
 
 IPv4 listener: `listen` → `acceptConnection`.
+
+---
+
+## 🛠️ Настройки: `ServerOptions`
+
+Файл: `include/net/server/server-options.h`. Одно поле `options_` на сервере.
+
+```cpp
+struct ServerOptions {
+    bool reuse_address = true;   // SO_REUSEADDR на listen
+    SocketOptions accepted{};    // к каждому peer после accept
+};
+```
+
+`SocketOptions` / пресеты — [socket-options.md](../manuals/socket-options.md).  
+Введение: [sockets-intro.md](../manuals/sockets-intro.md).
 
 ---
 
@@ -25,11 +41,8 @@ IPv4 listener: `listen` → `acceptConnection`.
 #include <iostream>
 
 net::ServerOptions opts;
-opts.reuse_address             = true;
-opts.accepted.no_delay         = true;
-opts.accepted.send_timeout_sec = 60;
-opts.accepted.recv_timeout_sec = 60;
-opts.accepted.send_buffer_size = 1 << 20;
+opts.reuse_address = true;
+opts.accepted      = net::make_socket_options(net::SocketPreset::Interactive);
 
 net::TcpServer server;
 server.setOptions(opts);

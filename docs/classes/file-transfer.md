@@ -38,7 +38,7 @@
 
 **Приём:** ошибка mid-body — удаление частичного файла, `disconnect()`, `false`; успех — flush.
 
-Для долгих передач задайте `socket.setTimeouts(...)`.
+Для долгих передач задайте `socket.setTimeouts(...)` или пресет `SocketPreset::Bulk`.
 
 ---
 
@@ -50,7 +50,7 @@
 
 net::TcpSocket sock;
 sock.connect("127.0.0.1", 9000);
-sock.setTimeouts(60, 60);
+sock.setOptions(net::SocketPreset::Bulk);
 
 net::send_file_with_progress(sock, "data.bin",
     [](std::uint64_t sent, std::uint64_t total) {

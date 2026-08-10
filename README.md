@@ -31,13 +31,13 @@ timeouts), live `isConnected`, `receive_exact` и file size+payload.
 
 ## ✨ Модули
 
-| Документ                                                  | Роль                 |
-|-----------------------------------------------------------|----------------------|
-| [Введение: сокет и сервер](docs/manuals/sockets-intro.md) | как устроено         |
-| [Параметры сокета](docs/manuals/socket-options.md)        | поля, смысл, пресеты |
-| [Сокет](docs/classes/tcp-socket.md)                       | класс `TcpSocket`    |
-| [Сервер](docs/classes/tcp-server.md)                      | класс `TcpServer`    |
-| [Передача файла](docs/classes/file-transfer.md)           | свободные функции    |
+| Документ                                           | Роль                        |
+|----------------------------------------------------|-----------------------------|
+| [🌐 Введение](docs/manuals/sockets-intro.md)       | как устроены сокет и сервер |
+| [⚙️ Параметры](docs/manuals/socket-options.md)     | поля, смысл, пресеты        |
+| [🔌 Сокет](docs/classes/tcp-socket.md)             | класс `TcpSocket`           |
+| [🖥️ Сервер](docs/classes/tcp-server.md)           | класс `TcpServer`           |
+| [📁 Передача файла](docs/classes/file-transfer.md) | свободные функции           |
 
 - C++17;
 - IPv4, TCP, блокирующий I/O;

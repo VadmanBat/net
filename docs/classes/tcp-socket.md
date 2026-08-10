@@ -33,7 +33,8 @@
 `SocketOptions` / `SocketPreset` — `include/net/socket/socket-options.h`.  
 `SocketStatus` — `include/net/socket/socket-status.h`.
 
-Параметры и пресеты: [socket-options.md](../manuals/socket-options.md). Введение: [sockets-intro.md](../manuals/sockets-intro.md).
+Параметры и пресеты: [socket-options.md](../manuals/socket-options.md).
+Введение: [sockets-intro.md](../manuals/sockets-intro.md).
 
 | Метод                       | Описание                                                            |
 |-----------------------------|---------------------------------------------------------------------|
@@ -55,7 +56,7 @@ probe + getsockopt + string) — для отладки / логов после �
 
 ---
 
-## `isConnected()`
+## 🔍 `isConnected()`
 
 1. нет fd → false;
 2. `getpeername` fail → false;
@@ -76,13 +77,7 @@ net::TcpSocket sock;
 if (!sock.connect("127.0.0.1", 50235))
     return;
 
-net::SocketOptions opts;
-opts.no_delay         = true;
-opts.send_buffer_size = 1 << 20;
-opts.recv_buffer_size = 1 << 20;
-opts.send_timeout_sec = 30;
-opts.recv_timeout_sec = 30;
-sock.setOptions(opts);
+sock.setOptions(net::SocketPreset::Interactive);
 
 const std::uint8_t payload[] = {1, 2, 3};
 sock.sendBytes(payload, sizeof(payload));
