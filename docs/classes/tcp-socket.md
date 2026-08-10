@@ -58,9 +58,9 @@ probe + getsockopt + string) — для отладки / логов после �
 
 ## 🔍 `isConnected()`
 
-1. нет fd → false;
-2. `getpeername` fail → false;
-3. `select` (0 timeout): нет ready → true;
+1. Нет fd → false.
+2. `getpeername` fail → false.
+3. `select` (0 timeout): нет ready → true.
 4. `recv(..., MSG_PEEK)`: `0` → peer закрыл; `>0` → true; would-block → true; иначе false.
 
 Обновляет внутренний `connected_`. Не заменяет keepalive: «тихий» half-open без FIN может ещё считаться true, пока стек
@@ -89,5 +89,5 @@ std::uint8_t buf[256];
 const net::Ssize n = sock.receiveBytes(buf, sizeof(buf));
 ```
 
-- `receiveBytes` — один `recv`; для ровно N байт — `net::receive_exact`.
-- Один сокет — из одного потока.
+1. `receiveBytes` — один `recv`; для ровно N байт — `net::receive_exact`.
+2. Один сокет — из одного потока.
