@@ -1,16 +1,12 @@
 #pragma once
 
+#include "net/server/server-options.h"
 #include "net/tcp-socket.h"
 
 #include <memory>
 #include <string>
 
 namespace net {
-struct ServerOptions {
-    bool reuse_address = true;
-    SocketOptions accepted{};
-};
-
 class TcpServer {
     SOCKET server_socket_ = INVALID_SOCKET;
     bool listening_       = false;

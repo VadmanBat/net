@@ -1,6 +1,6 @@
 #include "net/tcp-server.h"
 
-#include "net/net-initializer.h"
+#include "net/core/net-initializer.h"
 
 namespace net {
 TcpServer::TcpServer() {
@@ -16,7 +16,6 @@ TcpServer::TcpServer(TcpServer&& other) noexcept
 TcpServer::~TcpServer() {
     close();
 }
-
 
 TcpServer& TcpServer::operator=(TcpServer&& other) noexcept {
     if (this != &other) {

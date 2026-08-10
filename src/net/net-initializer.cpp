@@ -1,11 +1,10 @@
-#include "net/net-initializer.h"
+#include "net/core/net-initializer.h"
 
 #ifdef _WIN32
 #include <winsock2.h>
 #endif
 
 namespace net {
-
 NetInitializer NetInitializer::instance_;
 
 NetInitializer::NetInitializer() {

@@ -1,8 +1,10 @@
 #pragma once
 
+#include "net/socket/socket-options.h"
+#include "net/socket/socket-status.h"
+
 #include <cstddef>
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -29,36 +31,6 @@ constexpr int SOCKET_ERROR      = -1;
 namespace net {
 using Ssize = std::ptrdiff_t;
 
-struct SocketOptions {
-    std::optional<bool> no_delay;
-    std::optional<bool> keep_alive;
-    std::optional<std::size_t> send_buffer_size;
-    std::optional<std::size_t> recv_buffer_size;
-    std::optional<unsigned> send_timeout_sec;
-    std::optional<unsigned> recv_timeout_sec;
-};
-
-struct SocketStatus {
-    bool has_socket     = false;
-    bool flag_connected = false;
-    bool live_connected = false;
-
-    std::string local_ip;
-    std::uint16_t local_port = 0;
-    std::string remote_ip;
-    std::uint16_t remote_port = 0;
-
-    bool no_delay                = false;
-    bool keep_alive              = false;
-    std::size_t send_buffer_size = 0;
-    std::size_t recv_buffer_size = 0;
-
-    int last_os_error = 0;
-    std::string last_os_error_text;
-
-    std::string text;
-};
-
 class TcpSocket {
     SOCKET sock_               = INVALID_SOCKET;
     mutable bool connected_    = false;
@@ -76,10 +48,10 @@ public:
     TcpSocket(const TcpSocket&) = delete;
     TcpSocket(TcpSocket&& other) noexcept;
 
+    ~TcpSocket();
+
     TcpSocket& operator=(const TcpSocket&) = delete;
     TcpSocket& operator=(TcpSocket&& other) noexcept;
-
-    ~TcpSocket();
 
     bool connect(const std::string& ip, std::uint16_t port);
     bool disconnect();

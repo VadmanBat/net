@@ -1,6 +1,6 @@
 #include "net/tcp-socket.h"
 
-#include "net/net-initializer.h"
+#include "net/core/net-initializer.h"
 
 #ifndef _WIN32
 #include <cerrno>
