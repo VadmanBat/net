@@ -4,7 +4,6 @@
 #include <string_view>
 
 namespace net::test {
-
 inline int g_pass = 0;
 inline int g_fail = 0;
 
@@ -26,5 +25,4 @@ inline void summary(const std::string_view suite) {
 inline int failures() {
     return g_fail;
 }
-
-} // namespace net::test
+}
