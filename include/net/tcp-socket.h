@@ -68,6 +68,7 @@ public:
     [[nodiscard]] bool setRecvBufferSize(std::size_t bytes) const;
     [[nodiscard]] bool setTimeouts(unsigned send_timeout_sec, unsigned recv_timeout_sec) const;
     [[nodiscard]] bool setOptions(const SocketOptions& options) const;
+    [[nodiscard]] bool setOptions(SocketPreset preset) const;
 
     [[nodiscard]] bool isConnected() const;
 

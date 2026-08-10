@@ -25,18 +25,19 @@
 **Качество минимума:** полный `send`, cleanup fd, `inet_pton`, RAII, move-only, Winsock init, опции (`NODELAY`, buffers,
 timeouts), live `isConnected`, `receive_exact` и file size+payload.
 
-**Скорость:** разумный default (send-loop, буфер файла 64 KiБ), без претензии выжать канал на максимум.
+**Скорость:** разумный default (send-loop, буфер файла 64 KiБ).
 
 ---
 
 ## ✨ Модули
 
-| Модуль                                         | Роль                                                       |
-|------------------------------------------------|------------------------------------------------------------|
-| [**Настройка сокета**](docs/socket-options.md) | **гайд для начинающих: `SocketOptions` / `ServerOptions`** |
-| [Сокет](docs/tcp-socket.md)                    | клиент / peer: connect, send, recv, опции                  |
-| [Сервер](docs/tcp-server.md)                   | listen, accept, `ServerOptions`                            |
-| [Передача файла](docs/file-transfer.md)        | файл и примитивы                                           |
+| Документ                                                  | Роль                 |
+|-----------------------------------------------------------|----------------------|
+| [Введение: сокет и сервер](docs/manuals/sockets-intro.md) | как устроено         |
+| [Параметры сокета](docs/manuals/socket-options.md)        | поля, смысл, пресеты |
+| [Сокет](docs/classes/tcp-socket.md)                       | класс `TcpSocket`    |
+| [Сервер](docs/classes/tcp-server.md)                      | класс `TcpServer`    |
+| [Передача файла](docs/classes/file-transfer.md)           | свободные функции    |
 
 - C++17;
 - IPv4, TCP, блокирующий I/O;
@@ -59,7 +60,7 @@ cmake --build .
 # top-level: server / client (examples)
 ```
 
-### 📁️ В другой проект
+### ✈️ В другой проект
 
 ```cmake
 add_subdirectory(path/to/net)

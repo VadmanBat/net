@@ -8,10 +8,8 @@ int main() {
     const std::string listen_ip  = "0.0.0.0";
 
     net::ServerOptions opts;
-    opts.reuse_address             = true;
-    opts.accepted.no_delay         = true;
-    opts.accepted.send_timeout_sec = 30;
-    opts.accepted.recv_timeout_sec = 30;
+    opts.reuse_address = true;
+    opts.accepted      = net::make_socket_options(net::SocketPreset::Interactive);
 
     net::TcpServer server;
     server.setOptions(opts);

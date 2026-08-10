@@ -95,4 +95,8 @@ bool TcpSocket::setOptions(const SocketOptions& options) const {
 
     return true;
 }
+
+bool TcpSocket::setOptions(const SocketPreset preset) const {
+    return setOptions(make_socket_options(preset));
+}
 }
