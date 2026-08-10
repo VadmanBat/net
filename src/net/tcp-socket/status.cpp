@@ -11,9 +11,7 @@
 #endif
 
 namespace net {
-
 namespace {
-
 std::string os_error_text(const int code) {
     if (code == 0)
         return {};
@@ -55,7 +53,6 @@ bool read_endpoint(const SOCKET sock, const bool peer, std::string& ip, std::uin
     port = ntohs(addr.sin_port);
     return true;
 }
-
 } // namespace
 
 void TcpSocket::note_os_error() const {
@@ -113,5 +110,4 @@ SocketStatus TcpSocket::status() const {
 std::string TcpSocket::statusText() const {
     return status().text;
 }
-
 } // namespace net
