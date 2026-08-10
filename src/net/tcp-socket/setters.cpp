@@ -87,7 +87,7 @@ bool TcpSocket::setOptions(const SocketOptions& options) const {
     if (options.recv_buffer_size && !setRecvBufferSize(*options.recv_buffer_size))
         return false;
 
-    if (options.send_timeout_sec.has_value() || options.recv_timeout_sec.has_value()) {
+    if (options.send_timeout_sec || options.recv_timeout_sec) {
         const unsigned send_sec = options.send_timeout_sec.value_or(options.recv_timeout_sec.value_or(0));
         const unsigned recv_sec = options.recv_timeout_sec.value_or(options.send_timeout_sec.value_or(0));
         return setTimeouts(send_sec, recv_sec);
