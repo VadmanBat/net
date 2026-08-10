@@ -7,7 +7,15 @@ int main() {
     constexpr std::uint16_t port = 50235;
     const std::string listen_ip  = "0.0.0.0";
 
+    net::ServerOptions opts;
+    opts.reuse_address             = true;
+    opts.accepted.no_delay         = true;
+    opts.accepted.send_timeout_sec = 30;
+    opts.accepted.recv_timeout_sec = 30;
+
     net::TcpServer server;
+    server.setOptions(opts);
+
     if (!server.listen(listen_ip, port)) {
         std::cerr << "Server: failed to listen on port " << port << "\n";
         return 1;
@@ -21,9 +29,9 @@ int main() {
         return 1;
     }
 
-    std::cout << "Server: client connected\n";
+    std::cout << "Server: client connected from " << client_socket->remoteIp() << "\n";
 
-    if (std::vector<uint8_t> data = client_socket->receiveBytes(1024); data.empty()) {
+    if (std::vector<std::uint8_t> data = client_socket->receiveBytes(1024); data.empty()) {
         std::cout << "Server: no data received (connection closed)\n";
     }
     else {
