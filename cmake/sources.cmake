@@ -1,4 +1,4 @@
-set(SOURCES
+set(${PROJECT_NAME}_SOURCES
         src/net/net-initializer.cpp
         src/net/file-transfer.cpp
 
