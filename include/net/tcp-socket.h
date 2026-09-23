@@ -15,14 +15,14 @@
 #ifdef byte
 #undef byte
 #endif
-#define close_socket closesocket
+#define close_socket ::closesocket
 #define SHUT_RDWR SD_BOTH
 #else
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#define close_socket close
+#define close_socket ::close
 typedef int SOCKET;
 constexpr SOCKET INVALID_SOCKET = -1;
 constexpr int SOCKET_ERROR      = -1;
