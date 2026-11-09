@@ -1,5 +1,5 @@
 #pragma once
-// Created by Vadim 22.06.2026.
+// Created by Vadim on 22.06.2026.
 
 #include "net/socket/socket-options.h"
 #include "net/socket/socket-status.h"

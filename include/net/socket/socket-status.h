@@ -1,5 +1,5 @@
 #pragma once
-// Created by Vadim 10.08.2026.
+// Created by Vadim on 10.08.2026.
 
 #include <cstddef>
 #include <cstdint>
