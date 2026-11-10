@@ -1,5 +1,5 @@
-#pragma once
 // Created by Vadim on 10.08.2026.
+#pragma once
 
 #include <chrono>
 #include <condition_variable>

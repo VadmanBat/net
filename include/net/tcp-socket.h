@@ -1,5 +1,5 @@
-#pragma once
 // Created by Vadim on 22.06.2026.
+#pragma once
 
 #include "net/socket/socket-options.h"
 #include "net/socket/socket-status.h"

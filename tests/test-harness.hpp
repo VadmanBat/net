@@ -1,5 +1,5 @@
-#pragma once
 // Created by Vadim on 09.08.2026.
+#pragma once
 
 #include <iostream>
 #include <string_view>
